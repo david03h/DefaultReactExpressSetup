@@ -13,7 +13,7 @@ var src = config.src;
 var path = config.path;
 const multiPath = typeof src === "object" ? true : false;
 
-multiPath ? console.log("Watching:".red.bold,config.src) : console.log("Watching:".red.bold,`[ ${config.src.green} ]`);
+multiPath ? console.log("Watching:".red.bold,`[ `.white+`${config.src}`.green+` ]`.white) : console.log("Watching:".red.bold,`[ ${config.src.green} ]`);
 
 gulp.task('sass', function(){
     if(multiPath){

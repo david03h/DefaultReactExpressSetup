@@ -1,6 +1,4 @@
-
 module.exports = function(app) {
-
 	app.get('/helloworld1', (req,res) => {
 
 		res.render('base');
@@ -14,7 +12,5 @@ module.exports = function(app) {
 	app.get('*', (req, res) => {
 		
 		res.redirect('helloworld1');
-	});
-
-	
+	});	
 };

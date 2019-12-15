@@ -25,11 +25,10 @@ class Config{
         this.srcs = getAllDirectories(this.path);
 
         if(this.srcs.length == 0){
-            throw `There's not a single source in that path: ${this.path.green} `.red + `(that's default path)`.yellow + `
-If you want use your own path just add path parameter to config.json file.`.red + `
-Example:`.blue + ` "`.magenta + `path`.green + `"`.magenta + `: "`.magenta + `./src/components`.green + `"`.magenta + `  `.green + `(IMPORTANT to do it without "/" on the end)`.yellow;
-        }else if(this.srcs.length == 0){
-            throw `There's no directories in path: ${this.path.green}`.red;
+            throw `There's not a single source in that path: ${this.path.green} `.red + `(that's default path)`.yellow + 
+            `If you want use your own path just add path parameter to config.json file.`.red + 
+            `Example:`.blue + ` "`.magenta + `path`.green + `"`.magenta + `: "`.magenta + `./src/components`.green + `"`.magenta + `  `.green + 
+            `(IMPORTANT to do it without "/" on the end)`.yellow;
         }
 
         if(config && config.src != undefined){
@@ -39,22 +38,52 @@ Example:`.blue + ` "`.magenta + `path`.green + `"`.magenta + `: "`.magenta + `./
                 }else{
                     throw `There's no directory with id:`.red + ` ${config.src.toString().green} `+`on path: `.blue + `${this.path.green}`.red;
                 }
-            }else if(typeof config.src == "object"){
-                let sources = config.src.filter(srcs => srcs > this.srcs.length-1 || srcs < 0);
-                if(sources.length == 1){
-                    throw `There's no directory with id:`.red + ` [${sources}]`.green +` on path: `.red + `${this.path.green}`+`
-Correct your srcs in config.json.`.yellow;
-                }else if(sources.length > 0){
-                    throw `There's no directories with ids:`.red +` [${sources}]`.green +` on path: `.red + `${this.path.green}`+`
-Correct your srcs in config.json.`.yellow;
+            }
+
+            else if(typeof config.src == "string"){
+                let err = false
+                this.srcs.indexOf(config.src) > -1 ? this.src = this.srcs[this.srcs.indexOf(config.src)] : err = true;
+                if(err){
+                    throw `There's no directory with name: `.red+`${config.src}`.green +` on path: `.blue + `${this.path.green}`.red;
                 }
-                
-                for(let i = 0;i<config.src.length;i++){
-                    sources[i] = this.srcs[config.src[i]];
+            }
+
+            else if(typeof config.src == "object"){
+                if(typeof config.src[0] == "number"){
+                    let sources = config.src.filter(srcs => srcs > this.srcs.length-1 || srcs < 0);
+
+                    if(sources.length == 1){
+                        throw `There's no directory with id:`.red + ` ${sources}`.green +` on path: `.red + `${this.path.green}`+
+                        ` Correct your srcs in config.json.`.yellow;
+                    }else if(sources.length > 0){
+                        throw `There's no directories with ids:`.red + ` [ `.white+`${sources}`.green+` ]`.white +` on path: `.red + `${this.path.green}`+
+                        ` Correct your srcs in config.json.`.yellow;
+                    }
+                    
+                    for(let i = 0;i<config.src.length;i++){
+                        sources[i] = this.srcs[config.src[i]];
+                    }
+                    this.src = sources;
+                }else if(typeof config.src[0] == "string"){
+                    let sources = config.src.filter(srcs => this.srcs.indexOf(srcs) == -1);
+
+                    if(sources.length == 1){
+                        throw `There's no directory with name:`.red + ` ${sources}`.green +` on path: `.red + `${this.path.green}`+
+                        ` Correct your srcs in config.json.`.yellow;
+                    }else if(sources.length > 0){
+                        throw `There's no directories with names:`.red +` [ `.white+`${sources}`.green+` ]`.white +` on path: `.red + `${this.path.green}`+
+                        ` Correct your srcs in config.json.`.yellow;
+                    }
+                    
+                    for(let i = 0;i<config.src.length;i++){
+                        sources[i] = this.srcs[this.srcs.indexOf(config.src[i])];
+                    }
+                    this.src = sources;
+                }else{
+                    throw "Invalid input in src array".red;
                 }
-                this.src = sources;
             }else{
-                throw "Invalid src. Please input a number or array of numbers in your config.json file.".red;
+                throw "Invalid src. Please input a number,string,array of numbers or array of strings in your config.json file.".red;
             }
 
 
