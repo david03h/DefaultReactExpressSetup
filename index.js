@@ -5,6 +5,8 @@ const express = require('express'),
 //postatwowa konfiguracja
 app.set('host', '0.0.0.0');
 
+app.engine('ejs', require('express-ejs-extend'));
+app.set('view engine', 'ejs');
 app.set('views', './views');
 
 //statyczne pliki
