@@ -5,30 +5,43 @@ try{
     var data = fs.readFileSync('config.json','utf8');
 }catch(e){}
 
-class Config{
+class Config {
+
+    errors = {
+        path: {
+            undefined: (path) => `Path: ${path} does not exist`.red.bold,
+            empty: (path) => `This path is empty: ${path.green} `.red,
+            type: "Path should be string".red.bold 
+        },
+        src: {
+            wrong_id: (id) => `There's no directory with id:`.red + ` ${id.toString().green} `+`on path: `.red + `${this.path.green}`.red,
+            wrong_name: (name) => `There's no directory with name: `.red+`${name}`.green +` on path: `.red + `${this.path.green}`.red,
+            arrayType: "Invalid input in src array".red,
+            type: "Invalid src. Please input a number,string,array of numbers or array of strings in your config.json file.".red
+        }
+    }
+
     constructor(){
         let config;
         data ? config = JSON.parse(data) : config = undefined;
         // Default path
         this.path = "./src/components";
+
         if(config && config.path != undefined){
             if(typeof config.path == "string"){
                 if(fs.existsSync(config.path)){
                     this.path = config.path;
                 }else{
-                    throw `This path: ${config.path} doesn't exists`.red.bold;
+                    throw ReferenceError(this.errors.path.undefined(config.path));
                 }
             }else{
-                throw "Invalid path. Please input string in your config.json file.".red.bold;
+                throw TypeError(this.errors.path.type);
             }
         }
         this.srcs = getAllDirectories(this.path);
 
         if(this.srcs.length == 0){
-            throw `There's not a single source in that path: ${this.path.green} `.red + `(that's default path)`.yellow + 
-            `If you want use your own path just add path parameter to config.json file.`.red + 
-            `Example:`.blue + ` "`.magenta + `path`.green + `"`.magenta + `: "`.magenta + `./src/components`.green + `"`.magenta + `  `.green + 
-            `(IMPORTANT to do it without "/" on the end)`.yellow;
+            throw ReferenceError(this.errors.path.empty(this.path));
         }
 
         if(config && config.src != undefined){
@@ -36,57 +49,37 @@ class Config{
                 if(config.src <= this.srcs.length-1 && config.src >= 0){
                     this.src = this.srcs[config.src];
                 }else{
-                    throw `There's no directory with id:`.red + ` ${config.src.toString().green} `+`on path: `.blue + `${this.path.green}`.red;
+                    throw ReferenceError(this.errors.src.wrong_id(config.src));
                 }
             }
 
             else if(typeof config.src == "string"){
-                let err = false
+                let err = false;
                 this.srcs.indexOf(config.src) > -1 ? this.src = this.srcs[this.srcs.indexOf(config.src)] : err = true;
                 if(err){
-                    throw `There's no directory with name: `.red+`${config.src}`.green +` on path: `.blue + `${this.path.green}`.red;
+                    throw ReferenceError(this.errors.src.wrong_name(config.src));
                 }
             }
 
             else if(typeof config.src == "object"){
-                if(typeof config.src[0] == "number"){
-                    let sources = config.src.filter(srcs => srcs > this.srcs.length-1 || srcs < 0);
+                this.src = [];
 
-                    if(sources.length == 1){
-                        throw `There's no directory with id:`.red + ` ${sources}`.green +` on path: `.red + `${this.path.green}`+
-                        ` Correct your srcs in config.json.`.yellow;
-                    }else if(sources.length > 0){
-                        throw `There's no directories with ids:`.red + ` [ `.white+`${sources}`.green+` ]`.white +` on path: `.red + `${this.path.green}`+
-                        ` Correct your srcs in config.json.`.yellow;
-                    }
-                    
-                    for(let i = 0;i<config.src.length;i++){
-                        sources[i] = this.srcs[config.src[i]];
-                    }
-                    this.src = sources;
-                }else if(typeof config.src[0] == "string"){
-                    let sources = config.src.filter(srcs => this.srcs.indexOf(srcs) == -1);
+                for(let source of config.src){
+                    if(typeof source == "number"){
+                        if(source > this.srcs.length-1 || source < 0) throw ReferenceError(this.errors.src.wrong_id(source));
 
-                    if(sources.length == 1){
-                        throw `There's no directory with name:`.red + ` ${sources}`.green +` on path: `.red + `${this.path.green}`+
-                        ` Correct your srcs in config.json.`.yellow;
-                    }else if(sources.length > 0){
-                        throw `There's no directories with names:`.red +` [ `.white+`${sources}`.green+` ]`.white +` on path: `.red + `${this.path.green}`+
-                        ` Correct your srcs in config.json.`.yellow;
+                        this.src.push(this.srcs[source]);
+                    }else if(typeof source == "string"){
+                        if(this.srcs.indexOf(source) == -1) throw ReferenceError(this.errors.src.wrong_name(source));
+                        
+                        this.src.push(this.srcs[this.srcs.indexOf(source)]);
+                    }else{
+                        throw TypeError(this.errors.src.arrayType);
                     }
-                    
-                    for(let i = 0;i<config.src.length;i++){
-                        sources[i] = this.srcs[this.srcs.indexOf(config.src[i])];
-                    }
-                    this.src = sources;
-                }else{
-                    throw "Invalid input in src array".red;
                 }
             }else{
-                throw "Invalid src. Please input a number,string,array of numbers or array of strings in your config.json file.".red;
+                throw TypeError(this.errors.src.type);
             }
-
-
         }else{
             this.src = this.srcs;
         }
